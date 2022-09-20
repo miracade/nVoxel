@@ -92,22 +92,19 @@ int main()
 		else 
 			ms_since_last_input += dt_ms;
 
-		// if (resolution > 60 && frame_times.get<double>() > 33) --resolution;
-		// if (resolution < 320 && frame_times.get<double>() < 16) ++resolution;
-
-		// glSetDrawWidth(resolution);
-		// glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
-
-		if (isKeyPressed(KEY_NSPIRE_MINUS))
+		if (ms_since_last_input > 200)
 		{
-			if (resolution > 10) --resolution;
-			glSetDrawResolution(resolution);
+			resolution = 320;
 		}
-		if (isKeyPressed(KEY_NSPIRE_PLUS))
+		else if (frame_times.get<double>() < 33)
 		{
-			if (resolution < 320) ++resolution;
-			glSetDrawResolution(resolution);
+			resolution = 320;
 		}
+		else
+		{
+			resolution = 160;
+		}
+		glSetDrawResolution(resolution);
 
 		glPushMatrix();
 

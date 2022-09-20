@@ -26,8 +26,8 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 		// GLFix z = pos.z + block_coords.z;
 		// GLFix ground = fast_sin((x * 5 + z * 10).normaliseAngle()) * 2 + 4;
 		// blocktype_t type = y > ground ? 0 : (y > ground - 1 ? 2 : 1);
-		blocktype_t type = rng() % 2 ? 2 : 0;
-		// blocktype_t type = 1;
+		// blocktype_t type = rng() % 2 ? 2 : 0;
+		blocktype_t type = 1;
 		block.set_type(type);
 	}
 	update_visibility_mask();
