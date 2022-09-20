@@ -55,16 +55,16 @@ int main()
 	player.pos = {Block::block_size * CubicChunk::dim * 1, 0, Block::block_size * CubicChunk::dim * -2};
 
 	std::vector<CubicChunk> chunks;
-	CubicChunk chunk{VECTOR3{0, 0, 0}};
-	chunks.push_back(chunk);
-	// for (int z = 0; z < 6; z++)
-	// {
-	// 	for (int x = 0; x < 6; x++)
-	// 	{
-	// 		CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
-	// 		chunks.push_back(chunk);
-	// 	}
-	// }
+	// CubicChunk chunk{VECTOR3{0, 0, 0}};
+	// chunks.push_back(chunk);
+	for (int z = 0; z < 4; z++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
+			chunks.push_back(chunk);
+		}
+	}
 
 	Stopwatch total_stopwatch;
 	total_stopwatch.start();
@@ -74,6 +74,8 @@ int main()
 	double dt_ms = 0;
 
 	std::stringstream debug_info;
+
+	int resolution = 320;
 
 	unsigned int frame = 0;
 	while (!isKeyPressed(KEY_NSPIRE_ESC))
@@ -89,6 +91,25 @@ int main()
 			ms_since_last_input = 0; 
 		else 
 			ms_since_last_input += dt_ms;
+
+		// if (resolution > 60 && frame_times.get<double>() > 33) --resolution;
+		// if (resolution < 320 && frame_times.get<double>() < 16) ++resolution;
+
+		// glSetDrawWidth(resolution);
+		// glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
+
+		if (isKeyPressed(KEY_NSPIRE_MINUS))
+		{
+			if (resolution > 10) --resolution;
+			glSetDrawWidth(resolution);
+			glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
+		}
+		if (isKeyPressed(KEY_NSPIRE_PLUS))
+		{
+			if (resolution < 320) ++resolution;
+			glSetDrawWidth(resolution);
+			glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
+		}
 
 		glPushMatrix();
 
@@ -112,11 +133,12 @@ int main()
 
 		if (frame)
 		{
-			// debug_info.str("");
+			debug_info.str("");
 			debug_info << static_cast<int>(1000.0f / frame_times.get<double>()) << "FPS\n";
 			debug_info << frame_times.get<int>() << " mspt\n";
 			debug_info << vertex_count << " verts\n";
-			
+			debug_info << "Res: " << resolution << "\n";
+
 			// VECTOR3 c = {0, 0, 0};
 			// VECTOR3 p;
 			// nglMultMatVectRes(transformation, &c, &p);
@@ -126,19 +148,7 @@ int main()
 
 		glPopMatrix();
 
-		if constexpr (SCREEN_WIDTH == 160)
-		{
-			for (int y = 240-1; y >= 0; --y)
-			{
-				for (int x = 320-1; x >= 0; --x)
-				{
-					int src_y = y/2;
-					int src_x = x/2;
-					frame_buffer[y*320 + x] = frame_buffer[src_y*160 + src_x];
-				}
-			}
-		}
-
+		glUpscaleFrameBuffer();
 		font_print(frame_buffer, debug_info.str(), 2, 2, 0x0);
 
 		nglDisplay();
