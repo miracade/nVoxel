@@ -13,7 +13,7 @@
 class CubicChunk
 {
 public:
-	static constexpr int dim = 16;	// side length
+	static constexpr int dim = 8;	// side length
 	static constexpr int size = dim * dim * dim;	// volume
 	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z) {
 		return x + y * (dim + 1) + z * (dim + 1) * (dim + 1);
