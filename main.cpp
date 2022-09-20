@@ -101,14 +101,12 @@ int main()
 		if (isKeyPressed(KEY_NSPIRE_MINUS))
 		{
 			if (resolution > 10) --resolution;
-			glSetDrawWidth(resolution);
-			glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
+			glSetDrawResolution(resolution);
 		}
 		if (isKeyPressed(KEY_NSPIRE_PLUS))
 		{
 			if (resolution < 320) ++resolution;
-			glSetDrawWidth(resolution);
-			glSetDrawHeight(resolution * SCREEN_HEIGHT / SCREEN_WIDTH);
+			glSetDrawResolution(resolution);
 		}
 
 		glPushMatrix();
