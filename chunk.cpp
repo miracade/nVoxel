@@ -20,14 +20,12 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 	for (unsigned int i = 0; i < blocks.size(); ++i)
 	{
 		Block& block = blocks[i];
-		// VECTOR3 block_coords = coords_of_idx(i);
-		// GLFix x = pos.x + block_coords.x;
-		// GLFix y = pos.y + block_coords.y;
-		// GLFix z = pos.z + block_coords.z;
-		// GLFix ground = fast_sin((x * 5 + z * 10).normaliseAngle()) * 2 + 4;
-		// blocktype_t type = y > ground ? 0 : (y > ground - 1 ? 2 : 1);
-		// blocktype_t type = rng() % 2 ? 2 : 0;
-		blocktype_t type = 1;
+		VECTOR3 block_coords = coords_of_idx(i);
+		int x = block_coords.x / 2;
+		int y = block_coords.y / 2;
+		int z = block_coords.z / 2;
+		blocktype_t type = (x + y + z) % 4;
+		// blocktype_t type = 1;
 		block.set_type(type);
 	}
 	update_visibility_mask();

@@ -8,7 +8,8 @@
 #include "nGL/gl.h"
 
 #include "assets/ascii.hpp"
-#include "assets/blocks.hpp"
+// #include "assets/blocks.hpp"
+#include "assets/spritesheet.hpp"
 
 #include "timer.hpp"
 #include "running_average.hpp"
@@ -40,7 +41,7 @@ void dither_z_buffer(const uint16_t max_dist)
 int main()
 {
 	nglInit();
-	glBindTexture(&tex_blocks);
+	glBindTexture(&tex_spritesheet);
 
 	static COLOR frame_buffer[320 * 240];
 	// static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
