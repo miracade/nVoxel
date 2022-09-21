@@ -27,9 +27,9 @@ for i in range(0, src_img.width, BS):
 	tex = src_img.crop((i, 0, i + BS, BS))
 	tex = tile_image(tex)
 
-	dst_img.paste(alter_brightness(tex, 1.0), (0, i * 4))
-	dst_img.paste(alter_brightness(tex, 0.8), (BS * 4, i * 4))
-	dst_img.paste(alter_brightness(tex, 0.6), (BS * 4 * 2, i * 4))
+	dst_img.paste(alter_brightness(tex, 0.70), (0, i * 4))
+	dst_img.paste(alter_brightness(tex, 1.00), (BS * 4, i * 4))
+	dst_img.paste(alter_brightness(tex, 0.85), (BS * 4 * 2, i * 4))
 
 dst_img.show()
 dst_img.save('./assets/spritesheet.png')
