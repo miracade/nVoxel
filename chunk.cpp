@@ -2,11 +2,8 @@
 
 #include "chunk.hpp"
 
-#include <functional>
 #include <random>
 #include <sstream>
-
-#include "nGL/fastmath.h"
 
 static std::mt19937 rng;
 
