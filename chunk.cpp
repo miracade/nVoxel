@@ -136,7 +136,7 @@ void CubicChunk::set_block(int x, int y, int z, blocktype_t block_id)
 }
 
 
-int CubicChunk::render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch)
+int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch)
 {
 	// static std::map<VECTOR3, VECTOR3> projection_map;
 	ss.str("");

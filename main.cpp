@@ -122,8 +122,7 @@ int main()
 		int vertex_count = 0;
 		for (CubicChunk& chunk : chunks)
 		{
-			// vertex_count += chunk.render(player.pos);
-			vertex_count += chunk.render_new(player.pos, debug_info, lap_stopwatch);
+			vertex_count += chunk.render(player.pos, debug_info, lap_stopwatch);
 			// if (lap_stopwatch.get_ms() > (1000 / 12)) break;
 		}
 

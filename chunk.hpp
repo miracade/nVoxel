@@ -68,7 +68,7 @@ public:
 
 	void set_block(int x, int y, int z, blocktype_t block_id);
 	
-	int render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch);
+	int render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch);
 
 	// This is still public because Block uses it (deprecated code)
 	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z) {
