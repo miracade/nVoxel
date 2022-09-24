@@ -56,16 +56,16 @@ int main()
 	player.pos = {Block::block_size * CubicChunk::dim * 1, 0, Block::block_size * CubicChunk::dim * -2};
 
 	std::vector<CubicChunk> chunks;
-	CubicChunk chunk{VECTOR3{0, 0, 0}};
-	chunks.push_back(chunk);
-	// for (int z = 0; z < 4; z++)
-	// {
-	// 	for (int x = 0; x < 4; x++)
-	// 	{
-	// 		CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
-	// 		chunks.push_back(chunk);
-	// 	}
-	// }
+	// CubicChunk chunk{VECTOR3{0, 0, 0}};
+	// chunks.push_back(chunk);
+	for (int z = 0; z < 4; z++)
+	{
+		for (int x = 0; x < 4; x++)
+		{
+			CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
+			chunks.push_back(chunk);
+		}
+	}
 
 	Stopwatch total_stopwatch;
 	total_stopwatch.start();

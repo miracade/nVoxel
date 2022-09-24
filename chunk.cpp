@@ -63,9 +63,9 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 	{
 		Block& block = blocks[i];
 		VECTOR3 block_coords = coords_of_idx(i);
-		int x = block_coords.x / 2;
-		int y = block_coords.y / 2;
-		int z = block_coords.z / 2;
+		int x = block_coords.x / 4;
+		int y = block_coords.y / 4;
+		int z = block_coords.z / 4;
 		blocktype_t type = (x + y + z) % 4;
 		// blocktype_t type = 1;
 		block.set_type(type);
@@ -572,7 +572,13 @@ void CubicChunk::update_iverts_by_dir()
 			VECTOR3 adj_coords = coords + w_dir;
 			while (true)
 			{
+				if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
+					adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
+					adj_coords.z < GLFix{0} || adj_coords.z >= dim) break;
+					
 				int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+				if (next_idx >= size) break;
+
 				int next_tex = textures[next_idx];
 				if (next_tex != tex) break;
 
