@@ -15,6 +15,48 @@ const std::array<VECTOR3, 8> CubicChunk::corners = {
 	VECTOR3{  0,   0, dim}, VECTOR3{dim,   0, dim}, VECTOR3{  0, dim, dim}, VECTOR3{dim, dim, dim},
 };
 
+const std::array<VECTOR3, 6> CubicChunk::face_toplefts = {
+	VECTOR3{0, 0, 0}, VECTOR3{1, 0, 0},
+	VECTOR3{0, 0, 0}, VECTOR3{0, 1, 0},
+	VECTOR3{0, 0, 0}, VECTOR3{0, 0, 1},
+};
+
+const std::array<VECTOR3, 6> CubicChunk::face_u_orthos = {
+	VECTOR3{ 0,  0,  1}, VECTOR3{ 0,  0,  1},	
+	VECTOR3{ 0,  0,  1}, VECTOR3{ 0,  0,  1},	
+	VECTOR3{ 1,  0,  0}, VECTOR3{ 1,  0,  0}
+};
+
+const std::array<VECTOR3, 6> CubicChunk::face_v_orthos = {
+	VECTOR3{ 0,  1,  0}, VECTOR3{ 0,  1,  0}, 
+	VECTOR3{ 1,  0,  0}, VECTOR3{ 1,  0,  0}, 
+	VECTOR3{ 0,  1,  0}, VECTOR3{ 0,  1,  0}
+};
+
+std::array<IndexedVertex, 4> CubicChunk::get_ivert_quad(
+		VECTOR3 coords, 
+		int tex, int face, 
+		int u, int v)
+{
+	VECTOR3 tl = face_toplefts[face] + coords;
+	VECTOR3 tr = tl + face_u_orthos[face] * u;
+	VECTOR3 br = tr + face_v_orthos[face] * v;
+	VECTOR3 bl = tl + face_v_orthos[face] * v;
+
+	int axis = face / 2;
+	GLFix tex_u1 = Block::tex_size * axis * 4;
+	GLFix tex_v1 = Block::tex_size * tex * 4;
+	GLFix tex_u2 = tex_u1 + Block::tex_size * u;
+	GLFix tex_v2 = tex_v1 + Block::tex_size * v;
+
+	return std::array<IndexedVertex, 4>{
+		IndexedVertex{xyz_to_vert_idx(tl.x, tl.y, tl.z), tex_u1, tex_v1, 0xFFFF},
+		IndexedVertex{xyz_to_vert_idx(tr.x, tr.y, tr.z), tex_u2, tex_v1, 0xFFFF},
+		IndexedVertex{xyz_to_vert_idx(br.x, br.y, br.z), tex_u2, tex_v2, 0xFFFF},
+		IndexedVertex{xyz_to_vert_idx(bl.x, bl.y, bl.z), tex_u1, tex_v2, 0xFFFF}
+	};
+}
+
 CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 {
 	for (unsigned int i = 0; i < blocks.size(); ++i)
@@ -28,7 +70,11 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 		// blocktype_t type = 1;
 		block.set_type(type);
 	}
-	update_visibility_mask();
+	// blocks[coords_to_idx({0, 0, 0})].set_type(1);
+	// blocks[coords_to_idx({1, 0, 0})].set_type(1);
+	// blocks[coords_to_idx({1, 1, 0})].set_type(1);
+	update_textures_by_dir();
+	update_iverts_by_dir();
 }
 
 
@@ -63,17 +109,17 @@ void CubicChunk::set_block(int x, int y, int z, blocktype_t block_id)
 	Block* block = block_at(x, y, z);
 	if (block == nullptr) return;
 	block->set_type(block_id);
-	update_visibility_mask();
+	// update_occlusion_mask();
 }
 
 
-void CubicChunk::update_visibility_mask()
+void CubicChunk::update_occlusion_mask()
 {
 	// This function should be run whenever the `block` array changes
 
-	// This function updates the visibility mask for each block in the chunk.
-	// Each element in the visibility_mask corresponds to a block in the chunk.
-	// Each element in the visibility_mask is an array of 6 booleans, one for each face.
+	// This function updates the occlusion mask for each block in the chunk.
+	// Each element in the occlusion_mask corresponds to a block in the chunk.
+	// Each element in the occlusion_mask is an array of 6 booleans, one for each face.
 	// The faces are: -X, +X, -Y, +Y, -Z, +Z
 	// The boolean value indicates whether the face is visible or not.
 
@@ -91,33 +137,33 @@ void CubicChunk::update_visibility_mask()
 		Block* block = block_at(coords.x, coords.y, coords.z);
 		if (block->get_type() == 0)
 		{
-			visibility_mask[i] = {false, false, false, false, false, false};
+			occlusion_mask[i] = {false, false, false, false, false, false};
 			continue;
 		}
 
 		// -X
-		if (coords.x == GLFix{0}) visibility_mask[i][0] = true;
-		else visibility_mask[i][0] = block_at(coords.x - 1, coords.y, coords.z)->get_type() == 0;
+		if (coords.x == GLFix{0}) occlusion_mask[i][0] = true;
+		else occlusion_mask[i][0] = block_at(coords.x - 1, coords.y, coords.z)->get_type() == 0;
 
 		// +X
-		if (coords.x == GLFix{dim - 1}) visibility_mask[i][1] = true;
-		else visibility_mask[i][1] = block_at(coords.x + 1, coords.y, coords.z)->get_type() == 0;
+		if (coords.x == GLFix{dim - 1}) occlusion_mask[i][1] = true;
+		else occlusion_mask[i][1] = block_at(coords.x + 1, coords.y, coords.z)->get_type() == 0;
 
 		// -Y
-		if (coords.y == GLFix{0}) visibility_mask[i][2] = true;
-		else visibility_mask[i][2] = block_at(coords.x, coords.y - 1, coords.z)->get_type() == 0;
+		if (coords.y == GLFix{0}) occlusion_mask[i][2] = true;
+		else occlusion_mask[i][2] = block_at(coords.x, coords.y - 1, coords.z)->get_type() == 0;
 
 		// +Y
-		if (coords.y == GLFix{dim - 1}) visibility_mask[i][3] = true;
-		else visibility_mask[i][3] = block_at(coords.x, coords.y + 1, coords.z)->get_type() == 0;
+		if (coords.y == GLFix{dim - 1}) occlusion_mask[i][3] = true;
+		else occlusion_mask[i][3] = block_at(coords.x, coords.y + 1, coords.z)->get_type() == 0;
 
 		// -Z
-		if (coords.z == GLFix{0}) visibility_mask[i][4] = true;
-		else visibility_mask[i][4] = block_at(coords.x, coords.y, coords.z - 1)->get_type() == 0;
+		if (coords.z == GLFix{0}) occlusion_mask[i][4] = true;
+		else occlusion_mask[i][4] = block_at(coords.x, coords.y, coords.z - 1)->get_type() == 0;
 
 		// +Z
-		if (coords.z == GLFix{dim - 1}) visibility_mask[i][5] = true;
-		else visibility_mask[i][5] = block_at(coords.x, coords.y, coords.z + 1)->get_type() == 0;
+		if (coords.z == GLFix{dim - 1}) occlusion_mask[i][5] = true;
+		else occlusion_mask[i][5] = block_at(coords.x, coords.y, coords.z + 1)->get_type() == 0;
 	}
 }
 
@@ -137,12 +183,12 @@ void CubicChunk::update_vertices(VECTOR3 camera_pos)
 		block_pos.y *= Block::block_size;
 		block_pos.z *= Block::block_size;
 		std::array<bool, 6> mask = {
-			visibility_mask[i][0] && (block_pos.x > camera_pos.x),
-			visibility_mask[i][1] && (block_pos.x < camera_pos.x + Block::block_size),
-			visibility_mask[i][2] && (block_pos.y > camera_pos.y),
-			visibility_mask[i][3] && (block_pos.y < camera_pos.y + Block::block_size),
-			visibility_mask[i][4] && (block_pos.z > camera_pos.z),
-			visibility_mask[i][5] && (block_pos.z < camera_pos.z + Block::block_size),
+			occlusion_mask[i][0] && (block_pos.x > camera_pos.x),
+			occlusion_mask[i][1] && (block_pos.x < camera_pos.x + Block::block_size),
+			occlusion_mask[i][2] && (block_pos.y > camera_pos.y),
+			occlusion_mask[i][3] && (block_pos.y < camera_pos.y + Block::block_size),
+			occlusion_mask[i][4] && (block_pos.z > camera_pos.z),
+			occlusion_mask[i][5] && (block_pos.z < camera_pos.z + Block::block_size),
 		};
 		// blocks[i].write_vertices(vertices, block_pos, mask);
 		blocks[i].write_ivertices(indices, coords_of_idx(i), mask);
@@ -210,8 +256,8 @@ int CubicChunk::render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch&
 {
 	// static std::map<VECTOR3, VECTOR3> projection_map;
 	ss.str("");
-	ss << stopwatch.get_ms() << "\n";
-	ss << stopwatch.get_ms() << "\n";
+	// ss << stopwatch.get_ms() << "\n";
+	// ss << stopwatch.get_ms() << "\n";
 
 	auto& vi = xyz_to_vert_idx;
 
@@ -233,7 +279,7 @@ int CubicChunk::render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch&
 	}
 	if (out_of_bounds == corners.size()) return 0;
 
-	ss << stopwatch.get_ms() << "\n";
+	// ss << stopwatch.get_ms() << "\n";
 
 
 	for (int i = 0; i < corners.size(); i += 2)
@@ -359,7 +405,7 @@ int CubicChunk::render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch&
 	//			just pass in an array of already-processed positions and then pass 
 	//			false into the function's 'reset_processed' param
 
-	ss << stopwatch.get_ms() << "\n";
+	// ss << stopwatch.get_ms() << "\n";
 
 
 	positions.clear();
@@ -385,39 +431,167 @@ int CubicChunk::render_new(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch&
 		}
 	}
 
-	if (camera_pos != prev_camera_pos)
-	{
-		update_vertices(camera_pos);
-		prev_camera_pos = camera_pos;
-	}
-
-	ss << stopwatch.get_ms() << "\n";
-
-
-	// for (VERTEX vertex : vertices)
+	// if (camera_pos != prev_camera_pos)
 	// {
-	// 	// debug << "Vertex: " << (int)vertex.x << " " << (int)vertex.y << " " << (int)vertex.z << "\n";
-	// 	VECTOR3 vpos = VECTOR3{vertex.x, vertex.y, vertex.z} / Block::block_size - pos;
-	// 	auto it = std::find(positions.begin(), positions.end(), vpos);
-	// 	if (it == positions.end())
+	// 	// update_vertices(camera_pos);
+	// 	// update_occlusion_mask();
+	// 	// update_textures_by_dir();
+	// 	// update_iverts_by_dir();
+
+	// 	indices.clear();
+	// 	for (const std::vector<IndexedVertex>& iverts : iverts_by_dir)
 	// 	{
-	// 		exit(EXIT_FAILURE);
+	// 		int i = 0;
+	// 		for (const IndexedVertex& ivert : iverts)
+	// 		{
+	// 			// ss << ivert.index << " ";
+	// 			// if (++i % 4 == 0) ss << "\n";
+	// 			indices.push_back(ivert);
+	// 		}
 	// 	}
-	// 	unsigned int index = it - positions.begin();
-	// 	indices.push_back(IndexedVertex{index, vertex.u, vertex.v, vertex.c});
+	// 	prev_camera_pos = camera_pos;
 	// }
+	std::array<bool, 6> drawn_faces = {
+		(camera_pos.x / Block::block_size < pos.x + dim),
+		(camera_pos.x / Block::block_size > pos.x),
+		(camera_pos.y / Block::block_size < pos.y + dim),
+		(camera_pos.y / Block::block_size > pos.y),
+		(camera_pos.z / Block::block_size < pos.z + dim),
+		(camera_pos.z / Block::block_size > pos.z)
+	};
 
-	ss << stopwatch.get_ms() << "\n";
-
-
-	// debug << "Drawing " << indices.size() << " indexed vertices\n";
-	nglDrawArray(indices.data(), indices.size(),
+	int draw_count = 0;
+	for (int dir = 0; dir < 6; ++dir)
+	{
+		if (!drawn_faces[dir]) continue;
+		const std::vector<IndexedVertex>& iverts = iverts_by_dir[dir];
+		nglDrawArray(iverts.data(), iverts.size(),
 				 positions.data(), positions.size(), 
 				 processed.data(), GL_QUADS, 
 				 false);	// false for 'clear_processed' param bc we've already processed the positions
+		draw_count += iverts.size();
+	}
 
-	ss << stopwatch.get_ms() << "\n";
 
+	// ss << stopwatch.get_ms() << "\n";
 
-	return indices.size();
+	// nglDrawArray(indices.data(), indices.size(),
+	// 			 positions.data(), positions.size(), 
+	// 			 processed.data(), GL_QUADS, 
+	// 			 false);	// false for 'clear_processed' param bc we've already processed the positions
+
+	// ss << stopwatch.get_ms() << "\n";
+	return draw_count;
 }
+
+bool CubicChunk::block_is_visible_from_side(int idx, int side)
+{
+	VECTOR3 coords = coords_of_idx(idx);
+	switch (side)
+	{
+		case 0: --coords.x; break;
+		case 1: ++coords.x; break;
+		case 2: --coords.y; break;
+		case 3: ++coords.y; break;
+		case 4: --coords.z; break;
+		case 5: ++coords.z; break;
+	}
+	const Block* block = block_at(coords.x, coords.y, coords.z);
+	if (block == nullptr) return true;
+	return (block->get_type() == 0);
+}
+
+void CubicChunk::update_textures_by_dir()
+{
+	// This function updates the textures_by_dir array and should
+	// 	be called whenever the chunk's block data changes.
+
+	// Loop through all blocks in the chunk
+	for (int i = 0; i < size; ++i)
+	{
+		blocktype_t btype = blocks[i].get_type();
+		// If the block is air, don't render any of its faces
+		if (btype == 0)
+		{
+			for (std::array<int, size>& arr : textures_by_dir) arr[i] = 0;
+			continue;
+		}
+		
+		// Otherwise, only render the faces that aren't occluded
+		for (int face = 0; face < 6; ++face)
+		{
+			textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
+		}
+	}
+}
+
+void CubicChunk::update_iverts_by_dir()
+{
+	for (int face = 0; face < 6; ++face)
+	{
+		const auto& textures = textures_by_dir[face];
+		auto& iverts = iverts_by_dir[face];
+		iverts.clear();
+
+		// face is a number from 0 to 5, representing which face of the block
+		// 	we're working with. To combine textures and reduce the vertex count, 
+		//  we're trying to find adjacent faces with the same texture. However, since
+		// 	different faces face different directions, we need to take this into account.
+
+		// Given any coordinate `c` and its face:
+		//	the block `c + w_dir`'s face will be to its right
+		//	the block `c + h_dir`'s face will be to its bottom (since top-left is (0, 0))
+		VECTOR3 w_dir = face_u_orthos[face];
+		VECTOR3 h_dir = face_v_orthos[face];
+
+		std::array<bool, size> ignore_mask;
+		ignore_mask.fill(false);
+		
+		// Iterate through all blocks in the chunk
+		for (int idx = 0; idx < size; ++idx)
+		{
+			if (ignore_mask[idx]) continue;
+
+			VECTOR3 coords = coords_of_idx(idx);
+
+			int tex = textures[idx];
+			if (tex == 0) continue;
+
+			// Currently our texture is only a 1x1 block. Let's see if we can
+			// combine it with any adjacent blocks to make a larger texture while
+			// reducing the vertex count
+			int ivert_w = 1;
+			int ivert_h = 1;
+
+			// Keep looking to the right of the current block.
+			// If we find a block with the same texture, we can combine that one
+			// 	to our current texture. (We then set the texture of that block to 0
+			// 	so we don't render it multiple times.)
+			// If the block doesn't exist, or if it has a different texture, we stop.
+			
+			VECTOR3 adj_coords = coords + w_dir;
+			while (true)
+			{
+				int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+				int next_tex = textures[next_idx];
+				if (next_tex != tex) break;
+
+				ignore_mask[next_idx] = true;
+				++ivert_w;
+				adj_coords = adj_coords + w_dir;
+			}
+
+			// We're gonna skip looking down for now (TODO later)
+
+			// Now that we know how big our texture is, we can add the indexed vertices
+			// 	to our iverts vector :)
+			//  (the smiley face gets rid of all the bugs, trust me)
+			auto ivert_quad = get_ivert_quad(coords, tex, face, ivert_w, ivert_h);
+			for (const IndexedVertex& ivert : ivert_quad)
+			{
+				iverts.push_back(ivert);
+			}
+		}
+	}
+}
+
