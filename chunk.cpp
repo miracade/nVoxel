@@ -53,7 +53,7 @@ const std::array<VECTOR3, 6> CubicChunk::face_v_orthos = {
 
 
 
-VECTOR3 CubicChunk::coords_of_idx(int idx) const
+VECTOR3 CubicChunk::coords_of_idx(int idx)
 {
 	int x = idx % dim;
 	int y = (idx / dim) % dim;
@@ -61,7 +61,7 @@ VECTOR3 CubicChunk::coords_of_idx(int idx) const
 	return VECTOR3{x, y, z};
 }
 
-int CubicChunk::coords_to_idx(VECTOR3 coords) const
+int CubicChunk::coords_to_idx(VECTOR3 coords)
 {
 	return coords.x + coords.y * dim + coords.z * dim * dim;
 }
@@ -69,7 +69,9 @@ int CubicChunk::coords_to_idx(VECTOR3 coords) const
 
 Block* CubicChunk::block_at(int x, int y, int z)
 {
-	if (x < 0 || x >= dim || y < 0 || y >= dim || z < 0 || z >= dim) return nullptr;
+	if (x < 0 || x >= dim || 
+		y < 0 || y >= dim || 
+		z < 0 || z >= dim) return nullptr;
 	return &blocks[coords_to_idx({x, y, z})];
 }
 
@@ -95,8 +97,7 @@ bool CubicChunk::block_is_visible_from_side(int idx, int side)
 		case 5: ++coords.z; break;
 	}
 	const Block* block = block_at(coords.x, coords.y, coords.z);
-	if (block == nullptr) return true;
-	return (block->get_type() == 0);
+	return (block == nullptr || block->get_type() == 0);
 }
 
 std::array<IndexedVertex, 4> CubicChunk::get_ivert_quad(
@@ -121,6 +122,107 @@ std::array<IndexedVertex, 4> CubicChunk::get_ivert_quad(
 		IndexedVertex{xyz_to_vert_idx(br.x, br.y, br.z), tex_u2, tex_v2, 0xFFFF},
 		IndexedVertex{xyz_to_vert_idx(bl.x, bl.y, bl.z), tex_u1, tex_v2, 0xFFFF}
 	};
+}
+
+
+void CubicChunk::update_textures_by_dir()
+{
+	// This function updates the textures_by_dir array and should
+	// 	be called whenever the chunk's block data changes.
+
+	// Loop through all blocks in the chunk
+	for (int i = 0; i < size; ++i)
+	{
+		blocktype_t btype = blocks[i].get_type();
+		// If the block is air, don't render any of its faces
+		if (btype == 0)
+		{
+			for (std::array<int, size>& arr : textures_by_dir) arr[i] = 0;
+			continue;
+		}
+		
+		// Otherwise, only render the faces that aren't occluded
+		for (int face = 0; face < 6; ++face)
+		{
+			textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
+		}
+	}
+}
+
+void CubicChunk::update_iverts_by_dir()
+{
+	for (int face = 0; face < 6; ++face)
+	{
+		const auto& textures = textures_by_dir[face];
+		auto& iverts = iverts_by_dir[face];
+		iverts.clear();
+
+		// face is a number from 0 to 5, representing which face of the block
+		// 	we're working with. To combine textures and reduce the vertex count, 
+		//  we're trying to find adjacent faces with the same texture. However, since
+		// 	different faces face different directions, we need to take this into account.
+
+		// Given any coordinate `c` and its face:
+		//	the block `c + w_dir`'s face will be to its right
+		//	the block `c + h_dir`'s face will be to its bottom (since top-left is (0, 0))
+		VECTOR3 w_dir = face_u_orthos[face];
+		VECTOR3 h_dir = face_v_orthos[face];
+
+		std::array<bool, size> ignore_mask;
+		ignore_mask.fill(false);
+		
+		// Iterate through all blocks in the chunk
+		for (int idx = 0; idx < size; ++idx)
+		{
+			if (ignore_mask[idx]) continue;
+
+			VECTOR3 coords = coords_of_idx(idx);
+
+			int tex = textures[idx];
+			if (tex == 0) continue;
+
+			// Currently our texture is only a 1x1 block. Let's see if we can
+			// combine it with any adjacent blocks to make a larger texture while
+			// reducing the vertex count
+			int ivert_w = 1;
+			int ivert_h = 1;
+
+			// Keep looking to the right of the current block.
+			// If we find a block with the same texture, we can combine that one
+			// 	to our current texture. (We then set the texture of that block to 0
+			// 	so we don't render it multiple times.)
+			// If the block doesn't exist, or if it has a different texture, we stop.
+			
+			VECTOR3 adj_coords = coords + w_dir;
+			while (true)
+			{
+				if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
+					adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
+					adj_coords.z < GLFix{0} || adj_coords.z >= dim) break;
+					
+				int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+				if (next_idx >= size) break;
+
+				int next_tex = textures[next_idx];
+				if (next_tex != tex) break;
+
+				ignore_mask[next_idx] = true;
+				++ivert_w;
+				adj_coords = adj_coords + w_dir;
+			}
+
+			// We're gonna skip looking down for now (TODO later)
+
+			// Now that we know how big our texture is, we can add the indexed vertices
+			// 	to our iverts vector :)
+			//  (the smiley face gets rid of all the bugs, trust me)
+			auto ivert_quad = get_ivert_quad(coords, tex, face, ivert_w, ivert_h);
+			for (const IndexedVertex& ivert : ivert_quad)
+			{
+				iverts.push_back(ivert);
+			}
+		}
+	}
 }
 
 
@@ -363,106 +465,6 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 
 	// ss << stopwatch.get_ms() << "\n";
 	return draw_count;
-}
-
-void CubicChunk::update_textures_by_dir()
-{
-	// This function updates the textures_by_dir array and should
-	// 	be called whenever the chunk's block data changes.
-
-	// Loop through all blocks in the chunk
-	for (int i = 0; i < size; ++i)
-	{
-		blocktype_t btype = blocks[i].get_type();
-		// If the block is air, don't render any of its faces
-		if (btype == 0)
-		{
-			for (std::array<int, size>& arr : textures_by_dir) arr[i] = 0;
-			continue;
-		}
-		
-		// Otherwise, only render the faces that aren't occluded
-		for (int face = 0; face < 6; ++face)
-		{
-			textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
-		}
-	}
-}
-
-void CubicChunk::update_iverts_by_dir()
-{
-	for (int face = 0; face < 6; ++face)
-	{
-		const auto& textures = textures_by_dir[face];
-		auto& iverts = iverts_by_dir[face];
-		iverts.clear();
-
-		// face is a number from 0 to 5, representing which face of the block
-		// 	we're working with. To combine textures and reduce the vertex count, 
-		//  we're trying to find adjacent faces with the same texture. However, since
-		// 	different faces face different directions, we need to take this into account.
-
-		// Given any coordinate `c` and its face:
-		//	the block `c + w_dir`'s face will be to its right
-		//	the block `c + h_dir`'s face will be to its bottom (since top-left is (0, 0))
-		VECTOR3 w_dir = face_u_orthos[face];
-		VECTOR3 h_dir = face_v_orthos[face];
-
-		std::array<bool, size> ignore_mask;
-		ignore_mask.fill(false);
-		
-		// Iterate through all blocks in the chunk
-		for (int idx = 0; idx < size; ++idx)
-		{
-			if (ignore_mask[idx]) continue;
-
-			VECTOR3 coords = coords_of_idx(idx);
-
-			int tex = textures[idx];
-			if (tex == 0) continue;
-
-			// Currently our texture is only a 1x1 block. Let's see if we can
-			// combine it with any adjacent blocks to make a larger texture while
-			// reducing the vertex count
-			int ivert_w = 1;
-			int ivert_h = 1;
-
-			// Keep looking to the right of the current block.
-			// If we find a block with the same texture, we can combine that one
-			// 	to our current texture. (We then set the texture of that block to 0
-			// 	so we don't render it multiple times.)
-			// If the block doesn't exist, or if it has a different texture, we stop.
-			
-			VECTOR3 adj_coords = coords + w_dir;
-			while (true)
-			{
-				if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
-					adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
-					adj_coords.z < GLFix{0} || adj_coords.z >= dim) break;
-					
-				int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
-				if (next_idx >= size) break;
-
-				int next_tex = textures[next_idx];
-				if (next_tex != tex) break;
-
-				ignore_mask[next_idx] = true;
-				++ivert_w;
-				adj_coords = adj_coords + w_dir;
-			}
-
-			// We're gonna skip looking down for now (TODO later)
-
-			// Now that we know how big our texture is, we can add the indexed vertices
-			// 	to our iverts vector :)
-			//  (the smiley face gets rid of all the bugs, trust me)
-			auto ivert_quad = get_ivert_quad(coords, tex, face, ivert_w, ivert_h);
-			for (const IndexedVertex& ivert : ivert_quad)
-			{
-				iverts.push_back(ivert);
-			}
-		}
-	}
 }
 
 // LEGACY CODE FROM HERE ON OUT.

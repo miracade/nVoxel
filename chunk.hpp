@@ -43,18 +43,18 @@ private:
 	std::vector<ProcessedPosition> processed;
 
 	// Helper functions
+	static VECTOR3 coords_of_idx(int idx);
+	static int coords_to_idx(VECTOR3 coords);
+
+	Block* block_at(int x, int y, int z);
+	const Block* block_at(int x, int y, int z) const;
+
 	bool block_is_visible_from_side(int idx, int face);
 
 	static std::array<IndexedVertex, 4> get_ivert_quad(
 		VECTOR3 coords, 
 		blocktype_t btype, int face, 
 		int u, int v);
-
-	VECTOR3 coords_of_idx(int idx) const;
-	int coords_to_idx(VECTOR3 coords) const;
-
-	Block* block_at(int x, int y, int z);
-	const Block* block_at(int x, int y, int z) const;
 
 	void update_textures_by_dir();
 	void update_iverts_by_dir();
