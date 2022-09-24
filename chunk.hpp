@@ -29,10 +29,9 @@ private:
 	static const std::array<VECTOR3, 6> face_u_orthos;
 	static const std::array<VECTOR3, 6> face_v_orthos;
 
-	std::array<std::array<bool, 6>, size> occlusion_mask;
-
-	std::vector<VERTEX> vertices;
-	VECTOR3 prev_camera_pos;
+	// [[deprecated]] std::array<std::array<bool, 6>, size> occlusion_mask;
+	// [[deprecated]] std::vector<VERTEX> vertices;
+	// [[deprecated]] VECTOR3 prev_camera_pos;
 
 	std::array<VECTOR3, (dim+1)*(dim+1)*(dim+1)> projection_array;
 
@@ -57,12 +56,12 @@ private:
 	Block* block_at(int x, int y, int z);
 	const Block* block_at(int x, int y, int z) const;
 
-	void update_occlusion_mask();
-	void update_vertices(VECTOR3 camera_pos);
-	int render(VECTOR3 camera_pos);
-
 	void update_textures_by_dir();
 	void update_iverts_by_dir();
+
+	// [[deprecated]] void update_occlusion_mask();
+	// [[deprecated]] void update_vertices(VECTOR3 camera_pos);
+	// [[deprecated]] int _render_old(VECTOR3 camera_pos);
 
 public:
 	CubicChunk(VECTOR3 pos);
@@ -97,5 +96,6 @@ public:
 		- render_new() every frame
 
 	New pipeline:
+		TODO (it's done, i just need to update the comments)
 
 */

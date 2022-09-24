@@ -468,8 +468,13 @@ void CubicChunk::update_iverts_by_dir()
 	}
 }
 
-// LEGACY CODE FROM HERE ON OUT
+// LEGACY CODE FROM HERE ON OUT.
+// This code is marked as [[deprecated]] in the header file for the
+//	compiler.
 
+/*
+
+[[deprecated]]
 void CubicChunk::update_occlusion_mask()
 {
 	// This function should be run whenever the `block` array changes
@@ -524,6 +529,7 @@ void CubicChunk::update_occlusion_mask()
 	}
 }
 
+[[deprecated]]
 void CubicChunk::update_vertices(VECTOR3 camera_pos)
 {
 	vertices.clear();
@@ -551,7 +557,8 @@ void CubicChunk::update_vertices(VECTOR3 camera_pos)
 	}
 }
 
-int CubicChunk::render(VECTOR3 camera_pos)
+[[deprecated]]
+int CubicChunk::_render_old(VECTOR3 camera_pos)
 {
 	if (camera_pos != prev_camera_pos)
 	{
@@ -607,3 +614,5 @@ int CubicChunk::render(VECTOR3 camera_pos)
 
 	return vertices.size();
 }
+
+*/
