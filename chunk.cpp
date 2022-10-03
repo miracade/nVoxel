@@ -282,7 +282,6 @@ void CubicChunk::set_block(int x, int y, int z, blocktype_t block_id)
 	// update_occlusion_mask();
 }
 
-
 int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch)
 {
 	// static std::map<VECTOR3, VECTOR3> projection_map;
@@ -438,17 +437,17 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 
 	// ss << stopwatch.get_ms() << "\n";
 
-
-	positions.clear();
-	processed.clear();
-
 	// for (auto& [c, p] : projection_map)
 	// {
 	// 	positions.push_back(c);
 	// 	processed.push_back(ProcessedPosition{p, {0, 0, 0}, false});
 	// }
 
-	// TODO: optimize! this is no longer necessary now that i'm using an array instead of a map
+	// todo: optimize! this is no longer necessary now that i'm using an array instead of a map
+	// edit: somehow this is actually FASTER than just iterating through the projection array
+	// 	(i have no idea why, but we're keeping this i guess)
+	positions.clear();
+	processed.clear();
 	for (int z = 0; z < dim+1; ++z)
 	{
 		for (int y = 0; y < dim+1; ++y)
