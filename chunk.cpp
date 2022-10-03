@@ -249,8 +249,12 @@ void CubicChunk::update_iverts_by_dir()
 			}
 
 			// Update the ignore_mask array accordingly so we don't render the same
+<<<<<<< HEAD
 			// 	face multiple times. We've already done this for the top row so
 			// 	we're just doing it for the remaining ones
+=======
+			// 	face multiple times
+>>>>>>> 23c837e15d32814d37c064d34508c595b5944bc5
 			for (int u = 0; u < ivert_w; ++u)
 			{
 				for (int v = 1; v < ivert_h; ++v)
