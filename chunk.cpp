@@ -211,7 +211,55 @@ void CubicChunk::update_iverts_by_dir()
 				adj_coords = adj_coords + w_dir;
 			}
 
-			// We're gonna skip looking down for now (TODO later)
+			// Begin by assuming that our ivert can have a height of 4
+			//	(this is optimal)
+			ivert_h = 4;
+
+			// Iterate through columns of our current ivert
+			for (int u = 0; u < ivert_w; ++u)
+			{
+				for (int v = 1; v < ivert_h; ++v)
+				{
+					// If we find in any column that ivert can't have our assumed
+					// 	height, update ivert_h accordingly 
+
+					adj_coords = coords + (w_dir * u) + (h_dir * v);
+					if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
+						adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
+						adj_coords.z < GLFix{0} || adj_coords.z >= dim)
+					{
+						ivert_h = v; 
+						break;	
+					}
+						
+					int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+					if (next_idx >= size)
+					{
+						ivert_h = v; 
+						break;	
+					}
+
+					int next_tex = textures[next_idx];
+					if (next_tex != tex)
+					{
+						ivert_h = v; 
+						break;	
+					}
+				}
+			}
+
+			// Update the ignore_mask array accordingly so we don't render the same
+			// 	face multiple times. We've already done this for the top row so
+			// 	we're just doing it for the remaining ones
+			for (int u = 0; u < ivert_w; ++u)
+			{
+				for (int v = 1; v < ivert_h; ++v)
+				{
+					adj_coords = coords + (w_dir * u) + (h_dir * v);
+					int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+					ignore_mask[next_idx] = true;
+				}
+			}
 
 			// Now that we know how big our texture is, we can add the indexed vertices
 			// 	to our iverts vector :)
