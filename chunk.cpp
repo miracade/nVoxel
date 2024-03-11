@@ -134,23 +134,29 @@ void CubicChunk::update_textures_by_dir()
 	for (int i = 0; i < size; ++i)
 	{
 		blocktype_t btype = blocks[i].get_type();
-		// If the block is air, don't render any of its faces
+
 		if (btype == 0)
 		{
+			// If the block is air, don't render any of its faces
 			for (std::array<int, size>& arr : textures_by_dir) arr[i] = 0;
-			continue;
+		}
+		else
+		{
+			// Otherwise, only render the faces that aren't occluded
+			for (int face = 0; face < 6; ++face)
+			{
+				textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
+			}
 		}
 		
-		// Otherwise, only render the faces that aren't occluded
-		for (int face = 0; face < 6; ++face)
-		{
-			textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
-		}
 	}
 }
 
 void CubicChunk::update_iverts_by_dir()
 {
+	// This function uses the textures_by_dir arrays to update the iverts_by_dir vectors.
+	// 	Each element in the iverts_by_dir array is a vector of IndexedVertex structs.
+
 	for (int face = 0; face < 6; ++face)
 	{
 		const auto& textures = textures_by_dir[face];
@@ -289,9 +295,12 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// ss << stopwatch.get_ms() << "\n";
 	// ss << stopwatch.get_ms() << "\n";
 
+	/// PART 0: Easy Optimization
+	/// Use matrix multiplication to transform the corners of the chunk into screen coordinates.
+	/// If ALL of the corners are out of bounds, we don't need to render the chunk.
+
 	auto& vi = xyz_to_vert_idx;
 
-	// Use matrix multiplication to transform the corners of the chunk into screen coordinates
 	int out_of_bounds = 0;
 	for (int i = 0; i < corners.size(); ++i)
 	{
@@ -311,6 +320,10 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 
 	// ss << stopwatch.get_ms() << "\n";
 
+	/// PART 1: Transforming Position Vectors (v_*) into Projection Vectors (p_*)
+	///		AKA getting screen coordinates of vectors.
+	/// 	We do lots of linear interpolation here so not everything is 100%
+	///		accurate, but this seems to give us a >100% speedup, so we'll take it
 
 	for (int i = 0; i < corners.size(); i += 2)
 	{
@@ -427,14 +440,6 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	   << (int)p.x << " " << (int)p.y << " " << (int)p.z << "\n";
 	// }
 
-	// To use the nglDrawArray function, we need the following parameters:
-	// 		indices: An array of IndexedVertex structs ( {index, u, v, c} )
-	// 		positions: will be ignored since we've already processed the positions
-	// 		processed: stores the processed positions. typically the nglDrawArray function
-	// 			processes the positions for you, but since we've already done that, we
-	//			just pass in an array of already-processed positions and then pass 
-	//			false into the function's 'reset_processed' param
-
 	// ss << stopwatch.get_ms() << "\n";
 
 	// for (auto& [c, p] : projection_map)
@@ -442,6 +447,16 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	positions.push_back(c);
 	// 	processed.push_back(ProcessedPosition{p, {0, 0, 0}, false});
 	// }
+
+	/// PART 2: Format our positions and processed positions for the nglDrawArray function call
+	///
+	/// To use the nglDrawArray function, we need the following parameters:
+	/// 	indices: An array of IndexedVertex structs ( {index, u, v, c} )
+	/// 	positions: will be ignored since we've already processed the positions
+	/// 	processed: stores the processed positions. typically the nglDrawArray function
+	/// 		processes the positions for you, but since we've already done that, we
+	///		just pass in an array of already-processed positions and then pass 
+	///		false into the function's 'reset_processed' param
 
 	// todo: optimize! this is no longer necessary now that i'm using an array instead of a map
 	// edit: somehow this is actually FASTER than just iterating through the projection array
@@ -481,6 +496,13 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	}
 	// 	prev_camera_pos = camera_pos;
 	// }
+
+	/// PART 3: Use all the data we have to make the `nglDrawArray` function call.
+	///		We'll be drawing up to six faces of vertices, since the camera
+	///			could be in the chunk we're drawing.
+	///		The iverts are already generated from the `update_iverts_by_dir` call.
+	///		When we're all done, we return the number of faces we drew
+
 	std::array<bool, 6> drawn_faces = {
 		(camera_pos.x / Block::block_size < pos.x + dim),
 		(camera_pos.x / Block::block_size > pos.x),
