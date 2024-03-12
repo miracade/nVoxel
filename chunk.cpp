@@ -13,12 +13,12 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 	{
 		Block& block = blocks[i];
 		VECTOR3 block_coords = coords_of_idx(i);
-		int x = block_coords.x / 4;
-		int y = block_coords.y / 4;
-		int z = block_coords.z / 4;
-		blocktype_t type = (x + y + z) % 4;
-		// blocktype_t type = 1;
-		block.set_type(type);
+		int x = pos.x + block_coords.x;
+		int y = pos.y + block_coords.y;
+		int z = pos.z + block_coords.z;
+		blocktype_t type = (x + y + z) / 16 % 2 + 1;
+		bool exists = (x + 32-y + z) >= 32;
+		block.set_type(type * exists);
 	}
 	// blocks[coords_to_idx({0, 0, 0})].set_type(1);
 	// blocks[coords_to_idx({1, 0, 0})].set_type(1);
