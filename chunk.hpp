@@ -59,6 +59,15 @@ private:
 	void update_textures_by_dir();
 	void update_iverts_by_dir();
 
+	// The limit of block sizes that we render with greedy meshes.
+	// For example, with greed_limit 2, we will combine 2x2 faces
+	// into a single quad.
+	//
+	// NOTE: greed_limit > 4 results in out-of-bounds memory access, and 
+	//		so we don't allow it.
+	// NOTE: Never change this directly! Use set_greed_limit() instead
+	int greed_limit = 4;
+
 	// [[deprecated]] void update_occlusion_mask();
 	// [[deprecated]] void update_vertices(VECTOR3 camera_pos);
 	// [[deprecated]] int _render_old(VECTOR3 camera_pos);
@@ -69,6 +78,9 @@ public:
 	void set_block(int x, int y, int z, blocktype_t block_id);
 	
 	int render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch);
+
+	void set_greed_limit(int limit);
+	int get_greed_limit() { return greed_limit; }
 
 	// This is still public because Block uses it (deprecated code)
 	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z) {

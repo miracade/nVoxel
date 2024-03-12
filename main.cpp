@@ -47,7 +47,8 @@ int main()
 	static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	nglSetBuffer(frame_buffer);
 
-	std::remove_reference_t<decltype(*glGetZBuffer())> z_fog = Block::block_size * 32;
+	using z_buffer_t = std::remove_reference_t<decltype(*glGetZBuffer())>;
+	z_buffer_t z_fog = Block::block_size * 32;
 
 	int ms_since_last_input = 0;
 
@@ -60,10 +61,17 @@ int main()
 	// chunks.push_back(chunk);
 	for (int z = 0; z < 4; z++)
 	{
-		for (int x = 0; x < 4; x++)
-		{
-			CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
-			chunks.push_back(chunk);
+		for (int y = 0; y < 4; y++)
+		{		
+			for (int x = 0; x < 4; x++)
+			{
+				CubicChunk chunk{
+					VECTOR3{x * CubicChunk::dim, 
+							y * CubicChunk::dim, 
+							z * CubicChunk::dim}
+				};
+				chunks.push_back(chunk);
+			}
 		}
 	}
 
@@ -88,23 +96,25 @@ int main()
 		touchpad.update();
 		lap_stopwatch.start();
 
+		if (isKeyPressed(KEY_NSPIRE_A))
+			for (CubicChunk& chunk : chunks)
+				chunk.set_greed_limit(chunk.get_greed_limit() - 1);
+		if (isKeyPressed(KEY_NSPIRE_S))
+			for (CubicChunk& chunk : chunks)
+				chunk.set_greed_limit(chunk.get_greed_limit() + 1);
+
 		if (any_key_pressed() || touchpad.is_touched()) 
 			ms_since_last_input = 0; 
 		else 
 			ms_since_last_input += dt_ms;
 
 		if (ms_since_last_input > 200)
-		{
 			resolution = 320;
-		}
 		else if (frame_times.get<double>() < 33)
-		{
 			resolution = 320;
-		}
 		else
-		{
 			resolution = 160;
-		}
+
 		glSetDrawResolution(resolution);
 
 		glPushMatrix();
@@ -133,6 +143,7 @@ int main()
 			debug_info << frame_times.get<int>() << " mspt\n";
 			debug_info << vertex_count << " verts\n";
 			debug_info << "Res: " << resolution << "\n";
+			debug_info << "Greed: " << chunks[0].get_greed_limit() << "\n";
 
 			// VECTOR3 c = {0, 0, 0};
 			// VECTOR3 p;
