@@ -6,7 +6,7 @@ GXX = nspire-g++
 LD  = nspire-ld
 GENZEHN = genzehn
 
-GCCFLAGS = -Wall -Wextra -Wno-sign-compare -marm -I.
+GCCFLAGS = -Wall -Wextra -Werror=deprecated-declarations -Wno-sign-compare -marm -I.
 LDFLAGS =
 ZEHNFLAGS = --name "3d_test"
 

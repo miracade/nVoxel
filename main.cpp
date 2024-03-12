@@ -8,7 +8,8 @@
 #include "nGL/gl.h"
 
 #include "assets/ascii.hpp"
-#include "assets/blocks.hpp"
+// #include "assets/blocks.hpp"
+#include "assets/spritesheet.hpp"
 
 #include "timer.hpp"
 #include "running_average.hpp"
@@ -40,10 +41,10 @@ void dither_z_buffer(const uint16_t max_dist)
 int main()
 {
 	nglInit();
-	glBindTexture(&tex_blocks);
+	glBindTexture(&tex_spritesheet);
 
-	static COLOR frame_buffer[320 * 240];
-	// static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+	// static COLOR frame_buffer[320 * 240];
+	static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	nglSetBuffer(frame_buffer);
 
 	std::remove_reference_t<decltype(*glGetZBuffer())> z_fog = Block::block_size * 32;
@@ -121,14 +122,13 @@ int main()
 		int vertex_count = 0;
 		for (CubicChunk& chunk : chunks)
 		{
-			// vertex_count += chunk.render(player.pos);
-			vertex_count += chunk.render_new(player.pos, debug_info, lap_stopwatch);
+			vertex_count += chunk.render(player.pos, debug_info, lap_stopwatch);
 			// if (lap_stopwatch.get_ms() > (1000 / 12)) break;
 		}
 
 		if (frame)
 		{
-			debug_info.str("");
+			// debug_info.str("");
 			debug_info << static_cast<int>(1000.0f / frame_times.get<double>()) << "FPS\n";
 			debug_info << frame_times.get<int>() << " mspt\n";
 			debug_info << vertex_count << " verts\n";

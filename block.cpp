@@ -103,12 +103,15 @@ void Block::write_ivertices(std::vector<IndexedVertex>& iverts,
 	for (int i = 0; i < 6; ++i)
 	{
 		if (faces[i] == false) continue;
+
+		// axis is used for choosing which brightness texture to use
+		int axis = i / 2;
 		for (IndexedVertex vert : origin_cube_ivertices[i])
 		{
 			iverts.emplace_back(
 				vert.index + vi(subchunk_pos.x, subchunk_pos.y, subchunk_pos.z),
-				vert.u + type * static_cast<int>(tex_size),
-				vert.v,
+				vert.u + static_cast<int>(tex_size) * 4 * axis,
+				vert.v + static_cast<int>(tex_size) * 4 * type,
 				vert.c
 			);
 		}
