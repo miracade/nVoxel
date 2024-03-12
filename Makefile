@@ -42,7 +42,6 @@ $(EXE).elf: $(OBJS)
 $(EXE).tns: $(EXE).elf
 	$(GENZEHN) --input $^ --output $@.zehn $(ZEHNFLAGS)
 	make-prg $@.zehn $@
-	cp $@ /mnt/c/Users/devin/Downloads/sus
 	rm $@.zehn
 
 clean:
