@@ -96,23 +96,25 @@ int main()
 		touchpad.update();
 		lap_stopwatch.start();
 
+		if (isKeyPressed(KEY_NSPIRE_A))
+			for (CubicChunk& chunk : chunks)
+				chunk.set_greed_limit(chunk.get_greed_limit() - 1);
+		if (isKeyPressed(KEY_NSPIRE_S))
+			for (CubicChunk& chunk : chunks)
+				chunk.set_greed_limit(chunk.get_greed_limit() + 1);
+
 		if (any_key_pressed() || touchpad.is_touched()) 
 			ms_since_last_input = 0; 
 		else 
 			ms_since_last_input += dt_ms;
 
 		if (ms_since_last_input > 200)
-		{
 			resolution = 320;
-		}
 		else if (frame_times.get<double>() < 33)
-		{
 			resolution = 320;
-		}
 		else
-		{
 			resolution = 160;
-		}
+
 		glSetDrawResolution(resolution);
 
 		glPushMatrix();
@@ -141,6 +143,7 @@ int main()
 			debug_info << frame_times.get<int>() << " mspt\n";
 			debug_info << vertex_count << " verts\n";
 			debug_info << "Res: " << resolution << "\n";
+			debug_info << "Greed: " << chunks[0].get_greed_limit() << "\n";
 
 			// VECTOR3 c = {0, 0, 0};
 			// VECTOR3 p;

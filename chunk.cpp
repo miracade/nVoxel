@@ -16,7 +16,7 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 		int x = pos.x + block_coords.x;
 		int y = pos.y + block_coords.y;
 		int z = pos.z + block_coords.z;
-		blocktype_t type = (x + y + z) / 16 % 2 + 1;
+		blocktype_t type = 2;//(x + y + z) / 16 % 2 + 1;
 		bool exists = (x + 32-y + z) >= 32;
 		block.set_type(type * exists);
 	}
@@ -152,6 +152,15 @@ void CubicChunk::update_textures_by_dir()
 	}
 }
 
+
+void CubicChunk::set_greed_limit(int limit) {
+	// if (limit > 4) limit = 4;
+	if (limit < 1) limit = 1;
+	if (greed_limit == limit) return;
+	greed_limit = limit;
+	update_iverts_by_dir();
+}
+
 void CubicChunk::update_iverts_by_dir()
 {
 	// This function uses the textures_by_dir arrays to update the iverts_by_dir vectors.
@@ -200,7 +209,7 @@ void CubicChunk::update_iverts_by_dir()
 			// If the block doesn't exist, or if it has a different texture, we stop.
 			
 			VECTOR3 adj_coords = coords + w_dir;
-			while (true)
+			while (ivert_w < greed_limit)
 			{
 				if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
 					adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
@@ -217,9 +226,9 @@ void CubicChunk::update_iverts_by_dir()
 				adj_coords = adj_coords + w_dir;
 			}
 
-			// Begin by assuming that our ivert can have a height of 4
+			// Begin by assuming that our ivert can have a height of greed_limit
 			//	(this is optimal)
-			ivert_h = 4;
+			ivert_h = greed_limit;
 
 			// Iterate through columns of our current ivert
 			for (int u = 0; u < ivert_w; ++u)
