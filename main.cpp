@@ -47,7 +47,8 @@ int main()
 	static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	nglSetBuffer(frame_buffer);
 
-	std::remove_reference_t<decltype(*glGetZBuffer())> z_fog = Block::block_size * 32;
+	using z_buffer_t = std::remove_reference_t<decltype(*glGetZBuffer())>;
+	z_buffer_t z_fog = Block::block_size * 32;
 
 	int ms_since_last_input = 0;
 
@@ -60,10 +61,17 @@ int main()
 	// chunks.push_back(chunk);
 	for (int z = 0; z < 4; z++)
 	{
-		for (int x = 0; x < 4; x++)
-		{
-			CubicChunk chunk{VECTOR3{x * CubicChunk::dim, 0, z * CubicChunk::dim}};
-			chunks.push_back(chunk);
+		for (int y = 0; y < 4; y++)
+		{		
+			for (int x = 0; x < 4; x++)
+			{
+				CubicChunk chunk{
+					VECTOR3{x * CubicChunk::dim, 
+							y * CubicChunk::dim, 
+							z * CubicChunk::dim}
+				};
+				chunks.push_back(chunk);
+			}
 		}
 	}
 
