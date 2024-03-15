@@ -8,7 +8,6 @@
 #include "nGL/gl.h"
 
 #include "assets/ascii.hpp"
-// #include "assets/blocks.hpp"
 #include "assets/spritesheet.hpp"
 
 #include "timer.hpp"

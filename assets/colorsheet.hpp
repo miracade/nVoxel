@@ -1,0 +1,23 @@
+#pragma once
+
+#include "nGL/gl.h"
+
+COLOR texdata_colorsheet[] = {
+0xb016, 0xf81f, 0xd81b, 
+    0x8348, 0xbcab, 0x9bea, 
+    0x73ae, 0xad55, 0x8c71, 
+    0x4a69, 0x738e, 0x630c, 
+    0xb016, 0xf81f, 0xd81b, 
+    0xb016, 0xf81f, 0xd81b, 
+    0xb016, 0xf81f, 0xd81b, 
+    0xb016, 0xf81f, 0xd81b, 
+    };
+
+constexpr const TEXTURE tex_colorsheet = {
+    .width = 3,
+    .height = 8,
+    .has_transparency = false,
+    .transparent_color = 0x0000,
+    .bitmap = texdata_colorsheet
+};
+
