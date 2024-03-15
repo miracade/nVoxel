@@ -39,6 +39,7 @@ void dither_z_buffer(const uint16_t max_dist)
 
 int main()
 {
+	bool using_textures = true;
 	nglInit();
 	glBindTexture(&tex_spritesheet);
 
@@ -58,11 +59,11 @@ int main()
 	std::vector<CubicChunk> chunks;
 	// CubicChunk chunk{VECTOR3{0, 0, 0}};
 	// chunks.push_back(chunk);
-	for (int z = 0; z < 4; z++)
+	for (int z = 0; z < 1; z++)
 	{
-		for (int y = 0; y < 4; y++)
+		for (int y = 0; y < 1; y++)
 		{		
-			for (int x = 0; x < 4; x++)
+			for (int x = 0; x < 1; x++)
 			{
 				CubicChunk chunk{
 					VECTOR3{x * CubicChunk::dim, 
@@ -101,6 +102,13 @@ int main()
 		if (isKeyPressed(KEY_NSPIRE_S))
 			for (CubicChunk& chunk : chunks)
 				chunk.set_greed_limit(chunk.get_greed_limit() + 1);
+
+		if (isKeyPressed(KEY_NSPIRE_D))
+			for (CubicChunk& chunk : chunks)
+				chunk.disable_textures();
+		if (isKeyPressed(KEY_NSPIRE_F))
+			for (CubicChunk& chunk : chunks)
+				chunk.enable_textures();
 
 		if (any_key_pressed() || touchpad.is_touched()) 
 			ms_since_last_input = 0; 

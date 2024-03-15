@@ -51,7 +51,7 @@ private:
 
 	bool block_is_visible_from_side(int idx, int face);
 
-	static std::array<IndexedVertex, 4> get_ivert_quad(
+	std::array<IndexedVertex, 4> get_ivert_quad(
 		VECTOR3 coords, 
 		blocktype_t btype, int face, 
 		int u, int v);
@@ -68,6 +68,8 @@ private:
 	// NOTE: Never change this directly! Use set_greed_limit() instead
 	int greed_limit = 4;
 
+	bool using_textures = true;
+
 	// [[deprecated]] void update_occlusion_mask();
 	// [[deprecated]] void update_vertices(VECTOR3 camera_pos);
 	// [[deprecated]] int _render_old(VECTOR3 camera_pos);
@@ -81,6 +83,9 @@ public:
 
 	void set_greed_limit(int limit);
 	int get_greed_limit() { return greed_limit; }
+
+	void enable_textures();
+	void disable_textures();
 
 	// This is still public because Block uses it (deprecated code)
 	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z) {
