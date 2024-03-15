@@ -43,13 +43,13 @@ const std::array<VECTOR3, 6> CubicChunk::face_toplefts = {
 
 const std::array<VECTOR3, 6> CubicChunk::face_u_orthos = {
 	VECTOR3{ 0,  0, -1}, VECTOR3{ 0,  0,  1},	
-	VECTOR3{ 0,  0, -1}, VECTOR3{ 0,  0, -1},	
+	VECTOR3{ 1,  0,  0}, VECTOR3{ 0,  0, -1},	
 	VECTOR3{ 1,  0,  0}, VECTOR3{ 1,  0,  0}
 };
 
 const std::array<VECTOR3, 6> CubicChunk::face_v_orthos = {
 	VECTOR3{ 0, -1,  0}, VECTOR3{ 0, -1,  0}, 
-	VECTOR3{ 0, -1,  0}, VECTOR3{ 0, -1,  0}, 
+	VECTOR3{ 0,  0, -1}, VECTOR3{ 0, -1,  0}, 
 	VECTOR3{ 0,  1,  0}, VECTOR3{ 0,  1,  0}
 };
 
