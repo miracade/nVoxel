@@ -40,6 +40,7 @@ void dither_z_buffer(const uint16_t max_dist)
 int main()
 {
 	bool using_textures = true;
+	bool auto_lowres = true;
 	nglInit();
 	glBindTexture(&tex_spritesheet);
 
@@ -59,11 +60,11 @@ int main()
 	std::vector<CubicChunk> chunks;
 	// CubicChunk chunk{VECTOR3{0, 0, 0}};
 	// chunks.push_back(chunk);
-	for (int z = 0; z < 1; z++)
+	for (int z = 0; z < 4; z++)
 	{
 		for (int y = 0; y < 1; y++)
 		{		
-			for (int x = 0; x < 1; x++)
+			for (int x = 0; x < 4; x++)
 			{
 				CubicChunk chunk{
 					VECTOR3{x * CubicChunk::dim, 
@@ -103,24 +104,33 @@ int main()
 			for (CubicChunk& chunk : chunks)
 				chunk.set_greed_limit(chunk.get_greed_limit() + 1);
 
-		if (isKeyPressed(KEY_NSPIRE_D))
+		if (isKeyPressed(KEY_NSPIRE_D)) {
+			using_textures = false;
 			for (CubicChunk& chunk : chunks)
 				chunk.disable_textures();
-		if (isKeyPressed(KEY_NSPIRE_F))
+		}
+		if (isKeyPressed(KEY_NSPIRE_F)) {
+			using_textures = true;
 			for (CubicChunk& chunk : chunks)
 				chunk.enable_textures();
+		}
+		if (isKeyPressed(KEY_NSPIRE_R))
+			auto_lowres = !auto_lowres;
 
 		if (any_key_pressed() || touchpad.is_touched()) 
 			ms_since_last_input = 0; 
 		else 
 			ms_since_last_input += dt_ms;
 
-		if (ms_since_last_input > 200)
-			resolution = 320;
-		else if (frame_times.get<double>() < 33)
-			resolution = 320;
-		else
-			resolution = 160;
+		if (auto_lowres)
+		{
+			if (ms_since_last_input > 200)
+				resolution = 320;
+			else if (frame_times.get<double>() < 33)
+				resolution = 320;
+			else
+				resolution = 160;
+		}
 
 		glSetDrawResolution(resolution);
 
@@ -149,14 +159,13 @@ int main()
 			debug_info << static_cast<int>(1000.0f / frame_times.get<double>()) << "FPS\n";
 			debug_info << frame_times.get<int>() << " mspt\n";
 			debug_info << vertex_count << " verts\n";
-			debug_info << "Res: " << resolution << "\n";
-			debug_info << "Greed: " << chunks[0].get_greed_limit() << "\n";
-
-			// VECTOR3 c = {0, 0, 0};
-			// VECTOR3 p;
-			// nglMultMatVectRes(transformation, &c, &p);
-			// debug_info << (int)p.x << " " << (int)p.y << " " << (int)p.z << "\n";
-			// debug_info << "D=" << downsampling;
+			debug_info << "G" << chunks[0].get_greed_limit();
+			debug_info << "\n";
+			if (auto_lowres)
+				debug_info << "A";
+			if (using_textures)
+				debug_info << "T";
+			debug_info << "R" << resolution << "\n";
 		}
 
 		glPopMatrix();
