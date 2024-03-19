@@ -13,8 +13,8 @@
 class CubicChunk
 {
 public:
-	static constexpr int dim = 8;	// side length
-	static constexpr int size = dim * dim * dim;	// volume
+	static constexpr int dim = 8;				 // side length
+	static constexpr int size = dim * dim * dim; // volume
 
 private:
 	// Basic chunk attributes.
@@ -33,11 +33,11 @@ private:
 	// [[deprecated]] std::vector<VERTEX> vertices;
 	// [[deprecated]] VECTOR3 prev_camera_pos;
 
-	std::array<VECTOR3, (dim+1)*(dim+1)*(dim+1)> projection_array;
+	std::array<VECTOR3, (dim + 1)* (dim + 1)* (dim + 1)> projection_array;
 
 	std::array<std::array<int, size>, 6> textures_by_dir;
 	std::array<std::vector<IndexedVertex>, 6> iverts_by_dir;
-	
+
 	std::vector<IndexedVertex> indices;
 	std::vector<VECTOR3> positions;
 	std::vector<ProcessedPosition> processed;
@@ -51,9 +51,9 @@ private:
 
 	bool block_is_visible_from_side(int idx, int face);
 
-	static std::array<IndexedVertex, 4> get_ivert_quad(
-		VECTOR3 coords, 
-		blocktype_t btype, int face, 
+	std::array<IndexedVertex, 4> get_ivert_quad(
+		VECTOR3 coords,
+		blocktype_t btype, int face,
 		int u, int v);
 
 	void update_textures_by_dir();
@@ -63,10 +63,12 @@ private:
 	// For example, with greed_limit 2, we will combine 2x2 faces
 	// into a single quad.
 	//
-	// NOTE: greed_limit > 4 results in out-of-bounds memory access, and 
+	// NOTE: greed_limit > 4 results in out-of-bounds memory access, and
 	//		so we don't allow it.
 	// NOTE: Never change this directly! Use set_greed_limit() instead
-	int greed_limit = 4;
+	int greed_limit = 1;
+
+	bool using_textures = true;
 
 	// [[deprecated]] void update_occlusion_mask();
 	// [[deprecated]] void update_vertices(VECTOR3 camera_pos);
@@ -76,17 +78,22 @@ public:
 	CubicChunk(VECTOR3 pos);
 
 	void set_block(int x, int y, int z, blocktype_t block_id);
-	
+
 	int render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch);
 
 	void set_greed_limit(int limit);
 	int get_greed_limit() { return greed_limit; }
 
+	void enable_textures();
+	void disable_textures();
+
+	GLFix taxidist_to(VECTOR3 point);
+
 	// This is still public because Block uses it (deprecated code)
-	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z) {
+	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z)
+	{
 		return x + y * (dim + 1) + z * (dim + 1) * (dim + 1);
 	}
-
 };
 
 /*
