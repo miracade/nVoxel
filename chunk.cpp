@@ -18,7 +18,7 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 		int x = pos.x + block_coords.x;
 		int y = pos.y + block_coords.y;
 		int z = pos.z + block_coords.z;
-		blocktype_t type = 3;//(x + y + z) / 16 % 2 + 1;
+		blocktype_t type = 3; //(x + y + z) / 16 % 2 + 1;
 		bool exists = (fast_sin(GLFix(x * 14)) + fast_sin(GLFix(z * 19)) * 2) + 4 >= GLFix(y);
 		block.set_type(type * exists);
 	}
@@ -30,38 +30,38 @@ CubicChunk::CubicChunk(VECTOR3 pos) : pos(pos)
 	update_iverts_by_dir();
 }
 
-
 const std::array<VECTOR3, 8> CubicChunk::corners = {
-	VECTOR3{  0,   0,   0}, VECTOR3{dim,   0,   0}, VECTOR3{  0, dim,   0}, VECTOR3{dim, dim,   0},
-	VECTOR3{  0,   0, dim}, VECTOR3{dim,   0, dim}, VECTOR3{  0, dim, dim}, VECTOR3{dim, dim, dim},
+	VECTOR3{0, 0, 0},
+	VECTOR3{dim, 0, 0},
+	VECTOR3{0, dim, 0},
+	VECTOR3{dim, dim, 0},
+	VECTOR3{0, 0, dim},
+	VECTOR3{dim, 0, dim},
+	VECTOR3{0, dim, dim},
+	VECTOR3{dim, dim, dim},
 };
 
 const std::array<VECTOR3, 6> CubicChunk::face_toplefts = {
 	VECTOR3{0, 1, 1}, VECTOR3{1, 1, 0},
 	VECTOR3{1, 0, 1}, VECTOR3{0, 1, 1},
-	VECTOR3{0, 1, 0}, VECTOR3{1, 1, 1}
-};
+	VECTOR3{0, 1, 0}, VECTOR3{1, 1, 1} };
 
 const std::array<VECTOR3, 6> CubicChunk::face_u_orthos = {
-	VECTOR3{ 0,  0, -1}, VECTOR3{ 0,  0,  1},	
-	VECTOR3{-1,  0,  0}, VECTOR3{ 1,  0,  0},	
-	VECTOR3{ 1,  0,  0}, VECTOR3{-1,  0,  0}
-};
+	VECTOR3{0, 0, -1}, VECTOR3{0, 0, 1},
+	VECTOR3{-1, 0, 0}, VECTOR3{1, 0, 0},
+	VECTOR3{1, 0, 0}, VECTOR3{-1, 0, 0} };
 
 const std::array<VECTOR3, 6> CubicChunk::face_v_orthos = {
-	VECTOR3{ 0, -1,  0}, VECTOR3{ 0, -1,  0}, 
-	VECTOR3{ 0,  0, -1}, VECTOR3{ 0,  0, -1}, 
-	VECTOR3{ 0, -1,  0}, VECTOR3{ 0, -1,  0}
-};
-
-
+	VECTOR3{0, -1, 0}, VECTOR3{0, -1, 0},
+	VECTOR3{0, 0, -1}, VECTOR3{0, 0, -1},
+	VECTOR3{0, -1, 0}, VECTOR3{0, -1, 0} };
 
 VECTOR3 CubicChunk::coords_of_idx(int idx)
 {
 	int x = idx % dim;
 	int y = (idx / dim) % dim;
 	int z = idx / (dim * dim);
-	return VECTOR3{x, y, z};
+	return VECTOR3{ x, y, z };
 }
 
 int CubicChunk::coords_to_idx(VECTOR3 coords)
@@ -69,44 +69,56 @@ int CubicChunk::coords_to_idx(VECTOR3 coords)
 	return coords.x + coords.y * dim + coords.z * dim * dim;
 }
 
-
 Block* CubicChunk::block_at(int x, int y, int z)
 {
-	if (x < 0 || x >= dim || 
-		y < 0 || y >= dim || 
-		z < 0 || z >= dim) return nullptr;
-	return &blocks[coords_to_idx({x, y, z})];
+	if (x < 0 || x >= dim ||
+		y < 0 || y >= dim ||
+		z < 0 || z >= dim)
+		return nullptr;
+	return &blocks[coords_to_idx({ x, y, z })];
 }
 
 const Block* CubicChunk::block_at(int x, int y, int z) const
 {
-	if (x < 0 || x >= dim || 
-		y < 0 || y >= dim || 
-		z < 0 || z >= dim) return nullptr;
-	return &blocks[coords_to_idx({x, y, z})];
+	if (x < 0 || x >= dim ||
+		y < 0 || y >= dim ||
+		z < 0 || z >= dim)
+		return nullptr;
+	return &blocks[coords_to_idx({ x, y, z })];
 }
-
 
 bool CubicChunk::block_is_visible_from_side(int idx, int side)
 {
 	VECTOR3 coords = coords_of_idx(idx);
 	switch (side)
 	{
-		case 0: --coords.x; break;
-		case 1: ++coords.x; break;
-		case 2: --coords.y; break;
-		case 3: ++coords.y; break;
-		case 4: --coords.z; break;
-		case 5: ++coords.z; break;
+	case 0:
+		--coords.x;
+		break;
+	case 1:
+		++coords.x;
+		break;
+	case 2:
+		--coords.y;
+		break;
+	case 3:
+		++coords.y;
+		break;
+	case 4:
+		--coords.z;
+		break;
+	case 5:
+		++coords.z;
+		break;
 	}
 	const Block* block = block_at(coords.x, coords.y, coords.z);
 	return (block == nullptr || block->get_type() == 0);
 }
 
 std::array<IndexedVertex, 4> CubicChunk::get_ivert_quad(
-		VECTOR3 coords, 
-		int tex, int face, 
-		int u, int v)
+	VECTOR3 coords,
+	int tex, int face,
+	int u, int v)
 {
 	VECTOR3 tl = face_toplefts[face] + coords;
 	VECTOR3 tr = tl + face_u_orthos[face] * u;
@@ -122,13 +134,11 @@ std::array<IndexedVertex, 4> CubicChunk::get_ivert_quad(
 	COLOR solid_color = using_textures ? 0 : texdata_colorsheet[tex * 3 + axis];
 
 	return std::array<IndexedVertex, 4>{
-		IndexedVertex{xyz_to_vert_idx(tl.x, tl.y, tl.z), tex_u1, tex_v1, solid_color},
-		IndexedVertex{xyz_to_vert_idx(tr.x, tr.y, tr.z), tex_u2, tex_v1, solid_color},
-		IndexedVertex{xyz_to_vert_idx(br.x, br.y, br.z), tex_u2, tex_v2, solid_color},
-		IndexedVertex{xyz_to_vert_idx(bl.x, bl.y, bl.z), tex_u1, tex_v2, solid_color}
-	};
+		IndexedVertex{ xyz_to_vert_idx(tl.x, tl.y, tl.z), tex_u1, tex_v1, solid_color },
+			IndexedVertex{ xyz_to_vert_idx(tr.x, tr.y, tr.z), tex_u2, tex_v1, solid_color },
+			IndexedVertex{ xyz_to_vert_idx(br.x, br.y, br.z), tex_u2, tex_v2, solid_color },
+			IndexedVertex{ xyz_to_vert_idx(bl.x, bl.y, bl.z), tex_u1, tex_v2, solid_color }};
 }
-
 
 void CubicChunk::update_textures_by_dir()
 {
@@ -143,7 +153,8 @@ void CubicChunk::update_textures_by_dir()
 		if (btype == 0)
 		{
 			// If the block is air, don't render any of its faces
-			for (std::array<int, size>& arr : textures_by_dir) arr[i] = 0;
+			for (std::array<int, size>& arr : textures_by_dir)
+				arr[i] = 0;
 		}
 		else
 		{
@@ -153,32 +164,40 @@ void CubicChunk::update_textures_by_dir()
 				textures_by_dir[face][i] = block_is_visible_from_side(i, face) ? btype : 0;
 			}
 		}
-		
 	}
 }
 
-
-void CubicChunk::set_greed_limit(int limit) {
+void CubicChunk::set_greed_limit(int limit)
+{
 	// if (limit > 4) limit = 4;
-	if (limit < 1) limit = 1;
-	if (greed_limit == limit) return;
+	if (limit < 1)
+		limit = 1;
+	if (greed_limit == limit)
+		return;
 	greed_limit = limit;
 	update_iverts_by_dir();
 }
 
-
 void CubicChunk::enable_textures()
 {
-	if (using_textures) return;
+	if (using_textures)
+		return;
 	using_textures = true;
 	update_iverts_by_dir();
 }
 
 void CubicChunk::disable_textures()
 {
-	if (!using_textures) return;
+	if (!using_textures)
+		return;
 	using_textures = false;
 	update_iverts_by_dir();
+}
+
+GLFix CubicChunk::taxidist_to(VECTOR3 point)
+{
+	VECTOR3 center = pos + VECTOR3{ dim / 2, dim / 2, dim / 2 };
+	return (center.x - point.x).abs() + (center.y - point.y).abs() + (center.z - point.z).abs();
 }
 
 void CubicChunk::update_iverts_by_dir()
@@ -193,7 +212,7 @@ void CubicChunk::update_iverts_by_dir()
 		iverts.clear();
 
 		// face is a number from 0 to 5, representing which face of the block
-		// 	we're working with. To combine textures and reduce the vertex count, 
+		// 	we're working with. To combine textures and reduce the vertex count,
 		//  we're trying to find adjacent faces with the same texture. However, since
 		// 	different faces face different directions, we need to take this into account.
 
@@ -205,16 +224,18 @@ void CubicChunk::update_iverts_by_dir()
 
 		std::array<bool, size> ignore_mask;
 		ignore_mask.fill(false);
-		
+
 		// Iterate through all blocks in the chunk
 		for (int idx = 0; idx < size; ++idx)
 		{
-			if (ignore_mask[idx]) continue;
+			if (ignore_mask[idx])
+				continue;
 
 			VECTOR3 coords = coords_of_idx(idx);
 
 			int tex = textures[idx];
-			if (tex == 0) continue;
+			if (tex == 0)
+				continue;
 
 			// Currently our texture is only a 1x1 block. Let's see if we can
 			// combine it with any adjacent blocks to make a larger texture while
@@ -227,19 +248,22 @@ void CubicChunk::update_iverts_by_dir()
 			// 	to our current texture. (We then set the texture of that block to 0
 			// 	so we don't render it multiple times.)
 			// If the block doesn't exist, or if it has a different texture, we stop.
-			
+
 			VECTOR3 adj_coords = coords + w_dir;
 			while (ivert_w < greed_limit)
 			{
-				if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
-					adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
-					adj_coords.z < GLFix{0} || adj_coords.z >= dim) break;
-					
-				int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
-				if (next_idx >= size) break;
+				if (adj_coords.x < GLFix{ 0 } || adj_coords.x >= dim ||
+					adj_coords.y < GLFix{ 0 } || adj_coords.y >= dim ||
+					adj_coords.z < GLFix{ 0 } || adj_coords.z >= dim)
+					break;
+
+				int next_idx = coords_to_idx({ adj_coords.x, adj_coords.y, adj_coords.z });
+				if (next_idx >= size)
+					break;
 
 				int next_tex = textures[next_idx];
-				if (next_tex != tex) break;
+				if (next_tex != tex)
+					break;
 
 				ignore_mask[next_idx] = true;
 				++ivert_w;
@@ -256,29 +280,29 @@ void CubicChunk::update_iverts_by_dir()
 				for (int v = 1; v < ivert_h; ++v)
 				{
 					// If we find in any column that ivert can't have our assumed
-					// 	height, update ivert_h accordingly 
+					// 	height, update ivert_h accordingly
 
 					adj_coords = coords + (w_dir * u) + (h_dir * v);
-					if (adj_coords.x < GLFix{0} || adj_coords.x >= dim ||
-						adj_coords.y < GLFix{0} || adj_coords.y >= dim ||
-						adj_coords.z < GLFix{0} || adj_coords.z >= dim)
+					if (adj_coords.x < GLFix{ 0 } || adj_coords.x >= dim ||
+						adj_coords.y < GLFix{ 0 } || adj_coords.y >= dim ||
+						adj_coords.z < GLFix{ 0 } || adj_coords.z >= dim)
 					{
-						ivert_h = v; 
-						break;	
+						ivert_h = v;
+						break;
 					}
-						
-					int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+
+					int next_idx = coords_to_idx({ adj_coords.x, adj_coords.y, adj_coords.z });
 					if (next_idx >= size)
 					{
-						ivert_h = v; 
-						break;	
+						ivert_h = v;
+						break;
 					}
 
 					int next_tex = textures[next_idx];
 					if (next_tex != tex)
 					{
-						ivert_h = v; 
-						break;	
+						ivert_h = v;
+						break;
 					}
 				}
 			}
@@ -291,7 +315,7 @@ void CubicChunk::update_iverts_by_dir()
 				for (int v = 1; v < ivert_h; ++v)
 				{
 					adj_coords = coords + (w_dir * u) + (h_dir * v);
-					int next_idx = coords_to_idx({adj_coords.x, adj_coords.y, adj_coords.z});
+					int next_idx = coords_to_idx({ adj_coords.x, adj_coords.y, adj_coords.z });
 					ignore_mask[next_idx] = true;
 				}
 			}
@@ -308,11 +332,11 @@ void CubicChunk::update_iverts_by_dir()
 	}
 }
 
-
 void CubicChunk::set_block(int x, int y, int z, blocktype_t block_id)
 {
 	Block* block = block_at(x, y, z);
-	if (block == nullptr) return;
+	if (block == nullptr)
+		return;
 	block->set_type(block_id);
 	// update_occlusion_mask();
 }
@@ -338,14 +362,15 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 		// VECTOR3& processed_pos = projection_map[corners[i]];
 		VECTOR3& processed_pos = projection_array[vi(corners[i].x, corners[i].y, corners[i].z)];
 		nglMultMatVectRes(transformation, &expanded_pos, &processed_pos);
-		if (processed_pos.z < GLFix{0} ||
-			processed_pos.y / processed_pos.z > GLFix{1} || processed_pos.y / processed_pos.z < GLFix{-1} ||
-			processed_pos.x / processed_pos.z > GLFix{1} || processed_pos.x / processed_pos.z < GLFix{-1})
+		if (processed_pos.z < GLFix{ 0 } ||
+			processed_pos.y / processed_pos.z > GLFix{ 1 } || processed_pos.y / processed_pos.z < GLFix{ -1 } ||
+			processed_pos.x / processed_pos.z > GLFix{ 1 } || processed_pos.x / processed_pos.z < GLFix{ -1 })
 		{
 			++out_of_bounds;
 		}
 	}
-	if (out_of_bounds == corners.size()) return 0;
+	if (out_of_bounds == corners.size())
+		return 0;
 
 	// ss << stopwatch.get_ms() << "\n";
 
@@ -376,7 +401,7 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 		for (int x = 1; x < dim; ++x)
 		{
 			VECTOR3 p = p_start + p_delta * x;
-			VECTOR3 v = {x, v_start.y, v_start.z};
+			VECTOR3 v = { x, v_start.y, v_start.z };
 			// projection_map[v] = p;
 			projection_array[vi(v.x, v.y, v.z)] = p;
 		}
@@ -411,7 +436,7 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 			for (int y = 1; y < dim; ++y)
 			{
 				VECTOR3 p = p_start + p_delta * y;
-				VECTOR3 v = {x, y, v_start.z};
+				VECTOR3 v = { x, y, v_start.z };
 				// projection_map[v] = p;
 				projection_array[vi(v.x, v.y, v.z)] = p;
 			}
@@ -448,7 +473,7 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 				for (int z = 1; z < dim; ++z)
 				{
 					VECTOR3 p = p_start + p_delta * z;
-					VECTOR3 v = {x, y, z};
+					VECTOR3 v = { x, y, z };
 					// projection_map[v] = p;
 					projection_array[vi(v.x, v.y, v.z)] = p;
 				}
@@ -465,7 +490,7 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// // Print debug info
 	// for (auto& [v, p] : projection_map)
 	// {
-	// 	debug << "[" << (int)v.x << " " << (int)v.y << " " << (int)v.z << "]->[" 
+	// 	debug << "[" << (int)v.x << " " << (int)v.y << " " << (int)v.z << "]->["
 	// 	   << (int)p.x << " " << (int)p.y << " " << (int)p.z << "\n";
 	// }
 
@@ -484,7 +509,7 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	/// 	positions: will be ignored since we've already processed the positions
 	/// 	processed: stores the processed positions. typically the nglDrawArray function
 	/// 		processes the positions for you, but since we've already done that, we
-	///		just pass in an array of already-processed positions and then pass 
+	///		just pass in an array of already-processed positions and then pass
 	///		false into the function's 'reset_processed' param
 
 	// todo: optimize! this is no longer necessary now that i'm using an array instead of a map
@@ -492,15 +517,15 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	(i have no idea why, but we're keeping this i guess)
 	positions.clear();
 	processed.clear();
-	for (int z = 0; z < dim+1; ++z)
+	for (int z = 0; z < dim + 1; ++z)
 	{
-		for (int y = 0; y < dim+1; ++y)
+		for (int y = 0; y < dim + 1; ++y)
 		{
-			for (int x = 0; x < dim+1; ++x)
+			for (int x = 0; x < dim + 1; ++x)
 			{
-				const VECTOR3 p = {x, y, z};
+				const VECTOR3 p = { x, y, z };
 				positions.push_back(p);
-				processed.push_back(ProcessedPosition{projection_array[vi(p.x, p.y, p.z)], {0, 0, 0}, false});
+				processed.push_back(ProcessedPosition{ projection_array[vi(p.x, p.y, p.z)], {0, 0, 0}, false });
 			}
 		}
 	}
@@ -538,30 +563,30 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 		(camera_pos.y / Block::block_size < pos.y + dim),
 		(camera_pos.y / Block::block_size > pos.y),
 		(camera_pos.z / Block::block_size < pos.z + dim),
-		(camera_pos.z / Block::block_size > pos.z)
-	};
+		(camera_pos.z / Block::block_size > pos.z) };
 
 	const TEXTURE* texture = nglGetTexture();
-	if (!using_textures) glBindTexture(nullptr);
+	if (!using_textures)
+		glBindTexture(nullptr);
 
 	int draw_count = 0;
 	for (int dir = 0; dir < 6; ++dir)
 	{
-		if (!drawn_faces[dir]) continue;
+		if (!drawn_faces[dir])
+			continue;
 		const std::vector<IndexedVertex>& iverts = iverts_by_dir[dir];
 		nglDrawArray(iverts.data(), iverts.size(),
-				 positions.data(), positions.size(), 
-				 processed.data(), GL_QUADS, 
-				 false);	// false for 'clear_processed' param bc we've already processed the positions
+			positions.data(), positions.size(),
+			processed.data(), GL_QUADS,
+			false); // false for 'clear_processed' param bc we've already processed the positions
 		draw_count += iverts.size();
 	}
-
 
 	// ss << stopwatch.get_ms() << "\n";
 
 	// nglDrawArray(indices.data(), indices.size(),
-	// 			 positions.data(), positions.size(), 
-	// 			 processed.data(), GL_QUADS, 
+	// 			 positions.data(), positions.size(),
+	// 			 processed.data(), GL_QUADS,
 	// 			 false);	// false for 'clear_processed' param bc we've already processed the positions
 
 	// ss << stopwatch.get_ms() << "\n";
@@ -704,9 +729,9 @@ int CubicChunk::_render_old(VECTOR3 camera_pos)
 		nglMultMatVectRes(transformation, &positions[i], &processed[i].transformed);
 	}
 
-	nglDrawArray(indices.data(), indices.size(), 
+	nglDrawArray(indices.data(), indices.size(),
 				 positions.data(), positions.size(),
-				 processed.data(), 
+				 processed.data(),
 				 GL_QUADS, false);
 
 	// glBegin(GL_QUADS);

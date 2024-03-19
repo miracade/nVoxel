@@ -33,7 +33,7 @@ private:
 	// [[deprecated]] std::vector<VERTEX> vertices;
 	// [[deprecated]] VECTOR3 prev_camera_pos;
 
-	std::array<VECTOR3, (dim + 1) * (dim + 1) * (dim + 1)> projection_array;
+	std::array<VECTOR3, (dim + 1)* (dim + 1)* (dim + 1)> projection_array;
 
 	std::array<std::array<int, size>, 6> textures_by_dir;
 	std::array<std::vector<IndexedVertex>, 6> iverts_by_dir;
@@ -46,8 +46,8 @@ private:
 	static VECTOR3 coords_of_idx(int idx);
 	static int coords_to_idx(VECTOR3 coords);
 
-	Block *block_at(int x, int y, int z);
-	const Block *block_at(int x, int y, int z) const;
+	Block* block_at(int x, int y, int z);
+	const Block* block_at(int x, int y, int z) const;
 
 	bool block_is_visible_from_side(int idx, int face);
 
@@ -79,13 +79,15 @@ public:
 
 	void set_block(int x, int y, int z, blocktype_t block_id);
 
-	int render(VECTOR3 camera_pos, std::stringstream &ss, Stopwatch &stopwatch);
+	int render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch);
 
 	void set_greed_limit(int limit);
 	int get_greed_limit() { return greed_limit; }
 
 	void enable_textures();
 	void disable_textures();
+
+	GLFix taxidist_to(VECTOR3 point);
 
 	// This is still public because Block uses it (deprecated code)
 	static constexpr unsigned int xyz_to_vert_idx(int x, int y, int z)
