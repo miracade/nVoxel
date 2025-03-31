@@ -272,14 +272,14 @@ constexpr const TEXTURE tex_ascii = {
     .bitmap = texdata_ascii
 };
 
-inline void drawChar(COLOR* frame_buffer, char c, int x, int y, COLOR color)
+inline void draw_char(COLOR* frame_buffer, char c, int x, int y, COLOR color)
 {
     int tex_x = c % 16 * 16;
     int tex_y = c / 16 * 16;
 
-    for (int i = 0; i < 16; i++)
+    for (int j = 0; j < 16; j++)
     {
-        for (int j = 0; j < 16; j++)
+        for (int i = 0; i < 16; i++)
         {
             int src_x = tex_x + i;
             int src_y = tex_y + j;
@@ -304,7 +304,7 @@ void font_print(COLOR* frame_buffer, const std::string& str, int x, int y, COLOR
         }
         else
         {
-            drawChar(frame_buffer, c, x, y, color);
+            draw_char(frame_buffer, c, x, y, color);
             x += 12;
         }
     }
