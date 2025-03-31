@@ -17,6 +17,9 @@
 #include "player.hpp"
 #include "chunk.hpp"
 
+// NOTE: currently this function is horrendously slow, using around 5ms (really???)
+// 		If we pre-generate the dithered z-buffer and just copy it over each frame, we could
+// 		potentially save a lot of time. Otherwise, definitely not worth it
 void dither_z_buffer(const uint16_t max_dist)
 {
 	static constexpr uint16_t dither_tile[4][4] = {
@@ -39,7 +42,6 @@ void dither_z_buffer(const uint16_t max_dist)
 
 int main()
 {
-	bool auto_lowres = true;
 	GLFix texture_render_dist = 16;
 	nglInit();
 	glBindTexture(&tex_spritesheet);
@@ -48,8 +50,8 @@ int main()
 	static COLOR frame_buffer[SCREEN_WIDTH * SCREEN_HEIGHT];
 	nglSetBuffer(frame_buffer);
 
-	using z_buffer_t = std::remove_reference_t<decltype(*glGetZBuffer())>;
-	z_buffer_t z_fog = Block::block_size * 32;
+	// using z_buffer_t = std::remove_reference_t<decltype(*glGetZBuffer())>;
+	// z_buffer_t z_fog = Block::block_size * 32;
 
 	int ms_since_last_input = 0;
 
@@ -60,11 +62,11 @@ int main()
 	std::vector<CubicChunk> chunks;
 	// CubicChunk chunk{VECTOR3{0, 0, 0}};
 	// chunks.push_back(chunk);
-	for (int z = 0; z < 4; z++)
+	for (int z = 0; z < 1; z++)
 	{
 		for (int y = 0; y < 1; y++)
 		{
-			for (int x = 0; x < 4; x++)
+			for (int x = 0; x < 1; x++)
 			{
 				CubicChunk chunk{
 					VECTOR3{x * CubicChunk::dim,
@@ -85,24 +87,32 @@ int main()
 
 	std::stringstream debug_info;
 
-	int resolution = 320;
+	int resolution_options[] = { 80, 160, 320 };
+	int resolution_index = 2;
 
 	unsigned int frame = 0;
 	while (!isKeyPressed(KEY_NSPIRE_ESC))
 	{
 		frame++;
 
+		debug_info.str("");
+
 		// Updating the touchpad *after* starting the stopwatch makes the touchpad input
 		// stop working for some reason, so we have to do it before
 		touchpad.update();
 		lap_stopwatch.start();
 
-		if (isKeyPressed(KEY_NSPIRE_A))
-			for (CubicChunk& chunk : chunks)
-				chunk.set_greed_limit(chunk.get_greed_limit() - 1);
-		if (isKeyPressed(KEY_NSPIRE_S))
-			for (CubicChunk& chunk : chunks)
-				chunk.set_greed_limit(chunk.get_greed_limit() + 1);
+		debug_info << "start:" << lap_stopwatch.get_ms() << "\n";
+
+
+		// Gather player inputs
+
+		// if (isKeyPressed(KEY_NSPIRE_A))
+		// 	for (CubicChunk& chunk : chunks)
+		// 		chunk.set_greed_limit(chunk.get_greed_limit() - 1);
+		// if (isKeyPressed(KEY_NSPIRE_S))
+		// 	for (CubicChunk& chunk : chunks)
+		// 		chunk.set_greed_limit(chunk.get_greed_limit() + 1);
 
 		if (isKeyPressed(KEY_NSPIRE_D)) {
 			texture_render_dist -= 1;
@@ -111,24 +121,16 @@ int main()
 			texture_render_dist += 1;
 		}
 		if (isKeyPressed(KEY_NSPIRE_R))
-			auto_lowres = !auto_lowres;
+			resolution_index = (resolution_index + 1) % 3;
 
 		if (any_key_pressed() || touchpad.is_touched())
 			ms_since_last_input = 0;
 		else
 			ms_since_last_input += dt_ms;
 
-		if (auto_lowres)
-		{
-			if (ms_since_last_input > 200)
-				resolution = 320;
-			else if (frame_times.get<double>() < 33)
-				resolution = 320;
-			else
-				resolution = 160;
-		}
+		debug_info << "input:" << lap_stopwatch.get_ms() << "\n";
 
-		glSetDrawResolution(resolution);
+		glSetDrawResolution(resolution_options[resolution_index]);
 
 		glPushMatrix();
 
@@ -142,29 +144,34 @@ int main()
 		nglRotateY(GLFix{ 360 } - player.angle.y);
 		glTranslatef(-player.pos.x, -player.pos.y, -player.pos.z);
 
+		debug_info << "render setup:" << lap_stopwatch.get_ms() << "\n";
+
+
 		int vertex_count = 0;
 		for (CubicChunk& chunk : chunks)
 		{
-			if (chunk.taxidist_to(player.pos / Block::block_size) > texture_render_dist)
+			if (chunk.taxidist_to(player.pos / Block::block_size) > texture_render_dist) {
+
 				chunk.disable_textures();
-			else
+				chunk.set_greed_limit(4);
+			}
+			else {
 				chunk.enable_textures();
+				chunk.set_greed_limit(1);
+			}
 			vertex_count += chunk.render(player.pos, debug_info, lap_stopwatch);
 			// if (lap_stopwatch.get_ms() > (1000 / 12)) break;
 		}
 
 		if (frame)
 		{
-			// debug_info.str("");
-			debug_info << static_cast<int>(1000.0f / frame_times.get<double>()) << "FPS\n";
+			debug_info << static_cast<int>(1000.0f / frame_times.get<double>()) << "FPS; ";
 			debug_info << frame_times.get<int>() << " mspt\n";
+
 			debug_info << vertex_count << " verts\n";
-			debug_info << "G" << chunks[0].get_greed_limit();
-			debug_info << "\n";
-			if (auto_lowres)
-				debug_info << "A";
-			debug_info << "T" << (texture_render_dist / Block::block_size).toInteger<int>();
-			debug_info << "R" << resolution << "\n";
+
+			debug_info << "greed=" << chunks[0].get_greed_limit() << "; ";
+			debug_info << "res=" << resolution_options[resolution_index] << "\n";
 		}
 
 		glPopMatrix();
@@ -179,7 +186,6 @@ int main()
 	}
 
 	nglUninit();
-	// delete[] frame_buffer;
 
 	return 0;
 }

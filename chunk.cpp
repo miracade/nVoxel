@@ -344,9 +344,8 @@ void CubicChunk::set_block(int x, int y, int z, blocktype_t block_id)
 int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& stopwatch)
 {
 	// static std::map<VECTOR3, VECTOR3> projection_map;
-	ss.str("");
-	// ss << stopwatch.get_ms() << "\n";
-	// ss << stopwatch.get_ms() << "\n";
+	// ss.str("");
+	ss << "::" << stopwatch.get_ms() << "\n";
 
 	/// PART 0: Easy Optimization
 	/// Use matrix multiplication to transform the corners of the chunk into screen coordinates.
@@ -372,7 +371,8 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	if (out_of_bounds == corners.size())
 		return 0;
 
-	// ss << stopwatch.get_ms() << "\n";
+	ss << "0:" << stopwatch.get_ms() << "\n";
+
 
 	/// PART 1: Transforming Position Vectors (v_*) into Projection Vectors (p_*)
 	///		AKA getting screen coordinates of vectors.
@@ -502,6 +502,9 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	processed.push_back(ProcessedPosition{p, {0, 0, 0}, false});
 	// }
 
+	ss << "1:" << stopwatch.get_ms() << "\n";
+
+
 	/// PART 2: Format our positions and processed positions for the nglDrawArray function call
 	///
 	/// To use the nglDrawArray function, we need the following parameters:
@@ -551,6 +554,9 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 	// 	prev_camera_pos = camera_pos;
 	// }
 
+	ss << "2:" << stopwatch.get_ms() << "\n";
+
+
 	/// PART 3: Use all the data we have to make the `nglDrawArray` function call.
 	///		We'll be drawing up to six faces of vertices, since the camera
 	///			could be in the chunk we're drawing.
@@ -591,6 +597,9 @@ int CubicChunk::render(VECTOR3 camera_pos, std::stringstream& ss, Stopwatch& sto
 
 	// ss << stopwatch.get_ms() << "\n";
 	glBindTexture(texture);
+
+	ss << "3:" << stopwatch.get_ms() << "\n";
+
 	return draw_count;
 }
 

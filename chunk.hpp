@@ -13,7 +13,7 @@
 class CubicChunk
 {
 public:
-	static constexpr int dim = 8;				 // side length
+	static constexpr int dim = 16;				 // side length
 	static constexpr int size = dim * dim * dim; // volume
 
 private:
